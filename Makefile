@@ -10,10 +10,10 @@ rebuild:
 	@$(MAKE) run
 
 build:
-	@ocamlbuild -cflags '-w A' main.byte
+	@ocamlbuild -cflags '-w A' pomdp.byte
 
 run:
-	@./main.byte
+	@./pomdp.byte
 
 clean:
 	@ocamlbuild -clean
