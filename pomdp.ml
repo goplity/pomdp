@@ -1,4 +1,7 @@
-module List = ListLabels
+open Printf
+
+module List   = ListLabels
+module String = StringLabels
 
 module Order = struct
   type t = Lt | Eq | Gt
@@ -76,8 +79,21 @@ end = struct
       (p < epsillon) || (p > (1.0 -. epsillon))
     ))
 
+  let prob_vecs_to_string prob_vecs =
+    sprintf "| %s |"
+      (String.concat ~sep:" | " (
+        List.map prob_vecs ~f:(fun probs ->
+          String.concat ~sep:" " (List.map probs ~f:(sprintf "%f"))
+        )
+      ))
+
   let maximize prob_vecs ~init:max ~get ~compare ~coefficient =
-    let rec iter prob_vecs max =
+    let rec iter iter_count prob_vecs max =
+      let iter_count = succ iter_count in
+      printf
+        "%5d) %s\n%!"
+        iter_count
+        (prob_vecs_to_string prob_vecs);
       if is_converged prob_vecs ~epsillon:coefficient then
         max
       else
@@ -92,9 +108,9 @@ end = struct
               let max = candidate_max in
               (prob_vecs, max)
         in
-        iter prob_vecs max
+        iter iter_count prob_vecs max
     in
-    iter prob_vecs max
+    iter 0 prob_vecs max
 end
 
 let main () =
@@ -124,7 +140,7 @@ let main () =
       ~compare:     Order.compare
       ~coefficient: 0.01
   in
-  Printf.printf "max: %d\n" max
+  printf "max: %d\n" max
 
 let () =
   main ()
