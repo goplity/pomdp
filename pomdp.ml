@@ -140,7 +140,7 @@ let main () =
       ~compare:     Order.compare
       ~coefficient: 0.01
   in
-  printf "max: %d\n" max
+  printf "%d\n" max
 
 let () =
   main ()
