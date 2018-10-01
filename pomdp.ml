@@ -16,7 +16,8 @@ sig
     -> get: (coordinates -> 'a)
     -> compare: ('a -> 'a -> order)
     -> coefficient:float
-    -> coordinates
+    -> epsillon:float
+    -> 'a
 end = struct
   type prob = float
 
@@ -62,15 +63,25 @@ end = struct
     in
     List.map2 prob_vecs coordinates ~f:update
 
-  let maximize prob_vecs ~init:max ~get ~compare ~coefficient =
-    let coordinates = choose prob_vecs in
-    let candidate_max = get coordinates in
-    let (prob_vecs, max) =
-      match compare max candidate_max with
-      | Gt
-      | Eq -> (prob_vecs       , max)
-      | Lt -> (update prob_vecs ~coordinates ~coefficient, candidate_max)
-    in
-    (*choose prob_vecs*)
-    (* TODO: Decide: return or recur *)
+  let is_converged prob_vecs ~epsillon =
+    List.for_all prob_vecs ~f:(List.for_all ~f:(fun p ->
+      (p < epsillon) || (p > (1.0 -. epsillon))
+    ))
+
+  let rec maximize prob_vecs ~init:max ~get ~compare ~coefficient ~epsillon =
+    if is_converged prob_vecs ~epsillon then
+      max
+    else
+      let coordinates = choose prob_vecs in
+      let candidate_max = get coordinates in
+      let (prob_vecs, max) =
+        match compare max candidate_max with
+        | Gt | Eq ->
+            (prob_vecs, max)
+        | Lt ->
+            let prob_vecs = update prob_vecs ~coordinates ~coefficient in
+            let max = candidate_max in
+            (prob_vecs, max)
+      in
+      maximize prob_vecs ~init:max ~get ~compare ~coefficient ~epsillon
 end
