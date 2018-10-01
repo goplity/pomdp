@@ -90,7 +90,7 @@ end = struct
   let maximize prob_vecs ~init:max ~get ~compare ~coefficient =
     let rec iter iter_count prob_vecs max =
       let iter_count = succ iter_count in
-      printf
+      eprintf
         "%5d) %s\n%!"
         iter_count
         (prob_vecs_to_string prob_vecs);
