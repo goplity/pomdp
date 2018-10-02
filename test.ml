@@ -2,17 +2,27 @@ open Printf
 
 module List = ListLabels
 
+let rec read_lines () =
+  match read_line () with
+  | exception End_of_file ->
+      []
+  | line ->
+      line :: read_lines ()
+
+let re_whitespace =
+  Str.regexp "[ \t]+"
+
+let read_ints () =
+  read_lines ()
+  |> List.map ~f:(Str.split re_whitespace)
+  |> List.map ~f:(List.map ~f:int_of_string)
+
 let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
 let main () =
   let n_trials = 1_000 in
-  let space =
-    [ [1; 2; 3]
-    ; [4; 5; 6]
-    ; [7; 8; 9]
-    ]
-  in
+  let space = read_ints () in
   let rows = space in
   let col0 = List.nth space 0 in
   let n_rows = List.length rows in

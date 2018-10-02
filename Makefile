@@ -18,10 +18,10 @@ rebuild:
 	@$(MAKE) build
 
 build:
-	@ocamlbuild -cflags '-w A' $(EXECUTABLE_FILE)
+	@ocamlbuild -cflags '-w A' -pkg str $(EXECUTABLE_FILE)
 
 test:
-	@./$(EXECUTABLE_FILE)
+	@cat ./test.data | ./$(EXECUTABLE_FILE)
 
 clean:
 	@ocamlbuild -clean
