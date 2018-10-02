@@ -36,18 +36,18 @@ let main () =
       Pomdp.maximize
         ~trace:false
         init_prob_vecs
-        ~init:      [1; 0]
+        ~init:      [0; 0]
         ~compare:   (fun c1 c2 -> Order.compare (get c1) (get c2))
         ~coefficient: 0.1
     in
     let max = get coordinates_of_max in
     count max
   );
+  let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
+  let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   printf "Result | Count\n%!";
   printf "-------+------\n%!";
-  Hashtbl.iter
-    (fun k v -> printf "%6d | %5d\n%!" k v)
-    counts;
+  List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d\n%!" k v);
   printf "==============\n%!";
   printf "         %5d\n%!" n_trials
 
