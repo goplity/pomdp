@@ -43,9 +43,12 @@ let main () =
   let counts = Hashtbl.create (n_rows * n_cols) in
   List.iter space ~f:(List.iter ~f:(fun x -> Hashtbl.replace counts x 0));
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
+  let iter_max = ref 0 in
+  let iter_min = ref 1_000_000 in  (* A dirty lie, but simplifies init val *)
+  let iter_sum = ref 0 in
   Random.self_init ();
   repeat n_trials (fun () ->
-    let coordinates_of_max =
+    let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
         init_prob_vecs
         ~trace:false
@@ -53,16 +56,27 @@ let main () =
         ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
         ~epsillon:0.01
     in
-    let max = get coordinates_of_max in
-    count max
+    let max = get coordinates in
+    count max;
+    if iterations > !iter_max then iter_max := iterations;
+    if iterations < !iter_min then iter_min := iterations;
+    iter_sum := !iter_sum + iterations
   );
+  let iter_mean = !iter_sum / n_trials in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
+  printf "\n";
   printf "Result | Count\n%!";
   printf "-------+------\n%!";
   List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d\n%!" k v);
   printf "==============\n%!";
-  printf "         %5d\n%!" n_trials
+  printf "         %5d\n%!" n_trials;
+  printf "\n";
+  printf "Iterations:\n";
+  printf "    min  %d\n" !iter_min;
+  printf "    max  %d\n" !iter_max;
+  printf "    mean %d\n" iter_mean;
+  printf "\n"
 
 let () =
   main ()

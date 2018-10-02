@@ -6,9 +6,17 @@ module String = StringLabels
 
 type prob = float
 
+type prob_vecs = (prob list) list
+
 type prob_index = int
 
 type coordinates = prob_index list
+
+type state =
+  { coordinates : coordinates
+  ; prob_vecs   : prob_vecs
+  ; iterations  : int
+  }
 
 
 let uniform () =
@@ -66,20 +74,20 @@ let coordinates_to_string coordinates =
 
 let maximize ?(trace=false) prob_vecs ~init:coordinates ~max ~epsillon =
   let coefficient = 1.0 -. epsillon in
-  let rec iter iter_count prob_vecs coordinates =
-    let iter_count = succ iter_count in
+  let rec iter ({iterations; prob_vecs; coordinates} as state) =
+    let iterations = succ iterations in
     let converged = is_converged prob_vecs ~epsillon in
     if trace then
       eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
-        iter_count
+        iterations
         (prob_vecs_to_string prob_vecs)
         (coordinates_to_string coordinates)
         converged;
     if converged then
-      coordinates
+      state
     else
       let coordinates = max coordinates (choose prob_vecs) in
       let prob_vecs = update prob_vecs ~coordinates ~coefficient in
-      iter iter_count prob_vecs coordinates
+      iter {iterations; prob_vecs; coordinates}
   in
-  iter 0 prob_vecs coordinates
+  iter {iterations = 0; prob_vecs; coordinates}
