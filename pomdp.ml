@@ -60,25 +60,31 @@ let prob_vecs_to_string prob_vecs =
       )
     ))
 
-let maximize ?(trace=false) prob_vecs ~init:max ~get ~compare ~coefficient =
-  let rec iter iter_count prob_vecs max =
+let coordinates_to_string coordinates =
+  (String.concat ~sep:"; " (List.map coordinates ~f:string_of_int))
+
+let maximize ?(trace=false) prob_vecs ~init:coordinates ~compare ~coefficient =
+  let rec iter iter_count prob_vecs coordinates =
     let iter_count = succ iter_count in
+    let converged = is_converged prob_vecs ~epsillon:coefficient in
     if trace then
-      eprintf "%5d) %s\n%!" iter_count (prob_vecs_to_string prob_vecs);
-    if is_converged prob_vecs ~epsillon:coefficient then
-      max
+      eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
+        iter_count
+        (prob_vecs_to_string prob_vecs)
+        (coordinates_to_string coordinates)
+        converged;
+    if converged then
+      coordinates
     else
-      let coordinates = choose prob_vecs in
-      let candidate_max = get coordinates in
-      let (prob_vecs, max) =
-        match compare max candidate_max with
+      let coordinates_candidate = choose prob_vecs in
+      let (prob_vecs, coordinates) =
+        match compare coordinates coordinates_candidate with
         | Order.Gt | Order.Eq ->
-            (prob_vecs, max)
+            (prob_vecs, coordinates)
         | Order.Lt ->
             let prob_vecs = update prob_vecs ~coordinates ~coefficient in
-            let max = candidate_max in
-            (prob_vecs, max)
+            (prob_vecs, coordinates_candidate)
       in
-      iter iter_count prob_vecs max
+      iter iter_count prob_vecs coordinates
   in
-  iter 0 prob_vecs max
+  iter 0 prob_vecs coordinates
