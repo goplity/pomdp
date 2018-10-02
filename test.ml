@@ -6,7 +6,7 @@ let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
 let main () =
-  let n_trials = 1000 in
+  let n_trials = 1_000 in
   let space =
     [ [1; 2; 3]
     ; [4; 5; 6]
