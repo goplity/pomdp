@@ -34,11 +34,11 @@ let main () =
   repeat n_trials (fun () ->
     let coordinates_of_max =
       Pomdp.maximize
-        ~trace:false
         init_prob_vecs
-        ~init:      [0; 0]
-        ~compare:   (fun c1 c2 -> Order.compare (get c1) (get c2))
-        ~coefficient: 0.1
+        ~trace:false
+        ~init:[0; 0]
+        ~compare:(fun c1 c2 -> Order.compare (get c1) (get c2))
+        ~epsillon:0.1
     in
     let max = get coordinates_of_max in
     count max

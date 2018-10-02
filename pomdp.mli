@@ -9,5 +9,5 @@ val maximize
   -> (prob list) list
   -> init        : coordinates
   -> compare     : coordinates Order.compare
-  -> coefficient : float
+  -> epsillon    : float
   -> coordinates
