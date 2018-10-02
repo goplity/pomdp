@@ -33,12 +33,13 @@ let choose prob_vecs =
 let update prob_vecs ~coordinates ~coefficient:c =
   let update prob_vec index =
     let (_, prob_vecs, sum) =
-      List.fold_left prob_vec ~init:(0, [], 0.0) ~f:(fun (i, ps, sum) p ->
+      List.fold_left prob_vec ~init:(-1, [], 0.0) ~f:(fun (i, ps, sum) p ->
+        let i = succ i in
         if i = index then
-          (succ i, p :: ps, sum)
+          (i, p :: ps, sum)
         else
           let p = p *. c in
-          (succ i, p :: ps, sum +. p)
+          (i, p :: ps, sum +. p)
       )
     in
     let prob_vecs = List.rev prob_vecs in
