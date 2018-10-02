@@ -8,8 +8,9 @@ let rec repeat n thunk =
 let main () =
   let n_trials = 1000 in
   let space =
-    [ [7; 2]
-    ; [0; 7]
+    [ [1; 2; 3]
+    ; [4; 5; 6]
+    ; [7; 8; 9]
     ]
   in
   let rows = space in
