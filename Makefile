@@ -1,19 +1,27 @@
+EXECUTABLE_NAME := test
+EXECUTABLE_TYPE := byte
+EXECUTABLE_FILE := $(EXECUTABLE_NAME).$(EXECUTABLE_TYPE)
+
 .PHONY: \
+	all \
 	build \
 	rebuild \
-	run \
+	test \
 	clean
+
+all:
+	@$(MAKE) rebuild
+	@$(MAKE) test
 
 rebuild:
 	@$(MAKE) clean
 	@$(MAKE) build
-	@$(MAKE) run
 
 build:
-	@ocamlbuild -cflags '-w A' pomdp.byte
+	@ocamlbuild -cflags '-w A' $(EXECUTABLE_FILE)
 
-run:
-	@./pomdp.byte
+test:
+	@./$(EXECUTABLE_FILE)
 
 clean:
 	@ocamlbuild -clean
