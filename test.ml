@@ -21,7 +21,10 @@ let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
 let main () =
-  let n_trials = 1_000 in
+  let n_trials = ref 1_000 in
+  Arg.parse [("-n", Int (fun n -> n_trials := n), "")] (fun _ -> ()) "";
+  let n_trials = !n_trials in
+
   let space = read_ints () in
   let rows = space in
   let col0 = List.nth space 0 in
