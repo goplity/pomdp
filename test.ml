@@ -37,7 +37,7 @@ let main () =
         init_prob_vecs
         ~trace:false
         ~init:[0; 0]
-        ~compare:(fun c1 c2 -> Order.compare (get c1) (get c2))
+        ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
         ~epsillon:0.01
     in
     let max = get coordinates_of_max in

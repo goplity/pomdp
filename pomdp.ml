@@ -64,7 +64,7 @@ let prob_vecs_to_string prob_vecs =
 let coordinates_to_string coordinates =
   (String.concat ~sep:"; " (List.map coordinates ~f:string_of_int))
 
-let maximize ?(trace=false) prob_vecs ~init:coordinates ~compare ~epsillon =
+let maximize ?(trace=false) prob_vecs ~init:coordinates ~max ~epsillon =
   let coefficient = 1.0 -. epsillon in
   let rec iter iter_count prob_vecs coordinates =
     let iter_count = succ iter_count in
@@ -78,14 +78,7 @@ let maximize ?(trace=false) prob_vecs ~init:coordinates ~compare ~epsillon =
     if converged then
       coordinates
     else
-      let coordinates_candidate = choose prob_vecs in
-      let coordinates =
-        match compare coordinates coordinates_candidate with
-        | Order.Gt | Order.Eq ->
-            coordinates
-        | Order.Lt ->
-            coordinates_candidate
-      in
+      let coordinates = max coordinates (choose prob_vecs) in
       let prob_vecs = update prob_vecs ~coordinates ~coefficient in
       iter iter_count prob_vecs coordinates
   in

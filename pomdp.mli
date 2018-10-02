@@ -8,6 +8,6 @@ val maximize
   : ?trace       : bool
   -> (prob list) list
   -> init        : coordinates
-  -> compare     : coordinates Order.compare
+  -> max         : (coordinates -> coordinates -> coordinates)
   -> epsillon    : float
   -> coordinates
