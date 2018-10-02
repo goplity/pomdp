@@ -38,7 +38,7 @@ let main () =
         ~trace:false
         ~init:[0; 0]
         ~compare:(fun c1 c2 -> Order.compare (get c1) (get c2))
-        ~epsillon:0.1
+        ~epsillon:0.01
     in
     let max = get coordinates_of_max in
     count max
