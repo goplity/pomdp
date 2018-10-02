@@ -60,13 +60,11 @@ let prob_vecs_to_string prob_vecs =
       )
     ))
 
-let maximize prob_vecs ~init:max ~get ~compare ~coefficient =
+let maximize ?(trace=false) prob_vecs ~init:max ~get ~compare ~coefficient =
   let rec iter iter_count prob_vecs max =
     let iter_count = succ iter_count in
-    eprintf
-      "%5d) %s\n%!"
-      iter_count
-      (prob_vecs_to_string prob_vecs);
+    if trace then
+      eprintf "%5d) %s\n%!" iter_count (prob_vecs_to_string prob_vecs);
     if is_converged prob_vecs ~epsillon:coefficient then
       max
     else
