@@ -1,6 +1,18 @@
 open Printf
 
-module List = ListLabels
+module Array = ArrayLabels
+module List  = ListLabels
+
+type gen_spec =
+  { r : int
+  ; k : int
+  ; order : [`inc | `dec | `ran]
+  }
+
+type opt =
+  { n_trials : int
+  ; data_src : [ `read | `gen of gen_spec ]
+  }
 
 let rec read_lines () =
   match read_line () with
@@ -17,15 +29,69 @@ let read_ints () =
   |> List.map ~f:(Str.split re_whitespace)
   |> List.map ~f:(List.map ~f:int_of_string)
 
+let gen {r; k; order} =
+  let next =
+    match order with
+    | `inc ->
+        let count = ref 0 in
+        fun () -> incr count; !count
+    | `dec ->
+        let count = ref (r * k) in
+        fun () -> decr count; !count
+    | `ran ->
+        fun () -> Random.int 1000
+  in
+  let matrix = Array.make_matrix ~dimx:r ~dimy:k 0 in
+  Array.iteri matrix ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
+    matrix.(r).(k) <- next ()
+  ));
+  Array.to_list (Array.map matrix ~f:Array.to_list)
+
 let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
-let main () =
+let opt () : opt =
   let n_trials = ref 1_000 in
-  Arg.parse [("-n", Arg.Int (fun n -> n_trials := n), "")] (fun _ -> ()) "";
-  let n_trials = !n_trials in
+  let n_rows   = ref 3 in
+  let n_cols   = ref 3 in
+  let data_src = ref `read in
+  let data_src_gen order =
+    data_src := `gen {r = !n_rows; k = !n_cols; order}
+  in
+  data_src_gen `inc;
+  Arg.parse
+    [ ( "-gen"
+      , Arg.Tuple
+          [ Arg.Set_int n_rows
+          ; Arg.Set_int n_cols
+          ; Arg.Symbol
+              ( ["inc"; "dec"; "ran"]
+              , (function
+                | "inc" -> data_src_gen `inc
+                | "dec" -> data_src_gen `dec
+                | "ran" -> data_src_gen `ran
+                | _     -> assert false
+                )
+              )
+          ]
+      , "Generate data (instead of reading): <rows> <cols> <inc|dec|ran>"
+      )
+    ; ("-n", Arg.Set_int n_trials, "Number of trials to run")
+    ]
+    (fun _ -> ())
+    "";
+  { n_trials = !n_trials
+  ; data_src = !data_src
+  }
 
-  let space = read_ints () in
+let main () =
+  let opt = opt () in
+  let space =
+    match opt.data_src with
+    | `read     -> read_ints ()
+    | `gen spec -> gen spec
+  in
+
   let rows = space in
   let col0 = List.nth space 0 in
   let n_rows = List.length rows in
@@ -47,7 +113,7 @@ let main () =
   let iter_min = ref 1_000_000 in  (* A dirty lie, but simplifies init val *)
   let iter_sum = ref 0 in
   Random.self_init ();
-  repeat n_trials (fun () ->
+  repeat opt.n_trials (fun () ->
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
         init_prob_vecs
@@ -62,7 +128,7 @@ let main () =
     if iterations < !iter_min then iter_min := iterations;
     iter_sum := !iter_sum + iterations
   );
-  let iter_mean = !iter_sum / n_trials in
+  let iter_mean = !iter_sum / opt.n_trials in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   printf "\n";
@@ -70,7 +136,7 @@ let main () =
   printf "-------+------\n%!";
   List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d\n%!" k v);
   printf "==============\n%!";
-  printf "         %5d\n%!" n_trials;
+  printf "         %5d\n%!" opt.n_trials;
   printf "\n";
   printf "Iterations:\n";
   printf "    min  %d\n" !iter_min;

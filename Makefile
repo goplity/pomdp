@@ -26,7 +26,7 @@ bin:
 	@mkdir -p bin
 
 test:
-	@cat ./test.data | ./bin/$(EXECUTABLE_NAME)
+	@./bin/$(EXECUTABLE_NAME)
 
 clean:
 	@ocamlbuild -clean
