@@ -12,7 +12,7 @@ type gen_spec =
 type opt =
   { n_trials : int
   ; data_src : [ `read | `gen of gen_spec ]
-  ; epsillon : float
+  ; epsilon  : float
   }
 
 let rec read_lines () =
@@ -52,7 +52,7 @@ let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
 let opt () : opt =
-  let epsillon = ref 0.01 in
+  let epsilon  = ref 0.01 in
   let n_trials = ref 1_000 in
   let n_rows   = ref 3 in
   let n_cols   = ref 3 in
@@ -79,13 +79,13 @@ let opt () : opt =
       , "Generate data (instead of reading): <rows> <cols> <inc|dec|ran>"
       )
     ; ("-n", Arg.Set_int n_trials, "Number of trials to run")
-    ; ("-e", Arg.Set_float epsillon, "Epsilon")
+    ; ("-e", Arg.Set_float epsilon, "Epsilon")
     ]
     (fun _ -> ())
     "";
   { n_trials = !n_trials
   ; data_src = !data_src
-  ; epsillon = !epsillon
+  ; epsilon  = !epsilon
   }
 
 let main () =
@@ -124,7 +124,7 @@ let main () =
         ~trace:false
         ~init:[0; 0]
         ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
-        ~epsillon:opt.epsillon
+        ~epsilon:opt.epsilon
     in
     let max = get coordinates in
     count max;

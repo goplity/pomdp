@@ -56,9 +56,9 @@ let update prob_vecs ~coordinates ~coefficient:c =
   in
   List.map2 prob_vecs coordinates ~f:update
 
-let is_converged prob_vecs ~epsillon =
+let is_converged prob_vecs ~epsilon =
   List.for_all prob_vecs ~f:(List.for_all ~f:(fun p ->
-    (p < epsillon) || (p > (1.0 -. epsillon))
+    (p < epsilon) || (p > (1.0 -. epsilon))
   ))
 
 let prob_vecs_to_string prob_vecs =
@@ -72,11 +72,11 @@ let prob_vecs_to_string prob_vecs =
 let coordinates_to_string coordinates =
   (String.concat ~sep:"; " (List.map coordinates ~f:string_of_int))
 
-let maximize ?(trace=false) prob_vecs ~init:coordinates ~max ~epsillon =
-  let coefficient = 1.0 -. epsillon in
+let maximize ?(trace=false) prob_vecs ~init:coordinates ~max ~epsilon =
+  let coefficient = 1.0 -. epsilon in
   let rec iter ({iterations; prob_vecs; coordinates} as state) =
     let iterations = succ iterations in
-    let converged = is_converged prob_vecs ~epsillon in
+    let converged = is_converged prob_vecs ~epsilon in
     if trace then
       eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
         iterations

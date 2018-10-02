@@ -17,5 +17,5 @@ val maximize
   -> (prob list) list
   -> init        : coordinates
   -> max         : (coordinates -> coordinates -> coordinates)
-  -> epsillon    : float
+  -> epsilon     : float
   -> state
