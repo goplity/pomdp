@@ -100,6 +100,7 @@ let main () =
   let col0 = List.nth space 0 in
   let n_rows = List.length rows in
   let n_cols = List.length col0 in
+  let n_elements = n_rows * n_cols in
   let init_prob_vecs =
     let one_out_of total = 1.0 /. (float_of_int total) in
     [ List.map rows ~f:(fun _ -> one_out_of n_rows)
@@ -110,7 +111,7 @@ let main () =
     | [r; k] -> List.nth (List.nth space r) k
     | _      -> assert false
   in
-  let counts = Hashtbl.create (n_rows * n_cols) in
+  let counts = Hashtbl.create n_elements in
   List.iter space ~f:(List.iter ~f:(fun x -> Hashtbl.replace counts x 0));
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
   let iter_max = ref 0 in
@@ -135,14 +136,24 @@ let main () =
   let iter_mean = !iter_sum / opt.n_trials in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
+  let rank =
+    let tbl = Hashtbl.create n_elements in
+    List.iteri
+      (List.sort counts ~cmp:(fun (k1, _) (k2, _) -> compare k2 k1))
+      ~f:(fun r (k, _) -> Hashtbl.replace tbl k (r + 1));  (* Because 0 index *)
+    fun x ->
+      Hashtbl.find tbl x
+  in
   printf "\n";
-  printf "Result | Count\n%!";
-  printf "-------+------\n%!";
-  List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d\n%!" k v);
-  printf "==============\n%!";
-  printf "         %5d\n%!" opt.n_trials;
+  printf "Result | Count | Rank\n%!";
+  printf "-------+-------+-------\n%!";
+  List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d | %5d\n%!" k v (rank k));
+  printf "=======================\n%!";
   printf "\n";
-  printf "Iterations:\n";
+  printf "Trials:\n";
+  printf "    %d\n" opt.n_trials;
+  printf "\n";
+  printf "Iterations per trial:\n";
   printf "    min  %d\n" !iter_min;
   printf "    max  %d\n" !iter_max;
   printf "    mean %d\n" iter_mean;
