@@ -145,10 +145,14 @@ let main () =
       Hashtbl.find tbl x
   in
   printf "\n";
-  printf "Result | Count | Rank\n%!";
-  printf "-------+-------+-------\n%!";
-  List.iter counts ~f:(fun (k, v) -> printf "%6d | %5d | %5d\n%!" k v (rank k));
-  printf "=======================\n%!";
+  printf "Result | Count | Percent | Rank\n%!";
+  printf "-------+-------+---------+-------\n%!";
+  List.iter counts ~f:(fun (element, count) ->
+    printf
+      "%6d | %5d |    %3d%% | %5d\n%!"
+      element count (100 * count / opt.n_trials) (rank element)
+  );
+  printf "=================================\n%!";
   printf "\n";
   printf "Trials:\n";
   printf "    %d\n" opt.n_trials;
