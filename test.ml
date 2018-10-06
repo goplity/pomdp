@@ -97,14 +97,14 @@ let main () =
   in
 
   let rows = space in
-  let col0 = List.nth space 0 in
+  let row0 = List.nth rows 0 in
   let n_rows = List.length rows in
-  let n_cols = List.length col0 in
+  let n_cols = List.length row0 in
   let n_elements = n_rows * n_cols in
   let init_prob_vecs =
     let one_out_of total = 1.0 /. (float_of_int total) in
     [ List.map rows ~f:(fun _ -> one_out_of n_rows)
-    ; List.map col0 ~f:(fun _ -> one_out_of n_cols)
+    ; List.map row0 ~f:(fun _ -> one_out_of n_cols)
     ]
   in
   let get = function
