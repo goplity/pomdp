@@ -10,12 +10,12 @@ EXECUTABLE_TARGET := $(EXECUTABLE_NAME).$(EXECUTABLE_TYPE)
 	clean
 
 all:
-	@$(MAKE) rebuild
-	@$(MAKE) test
+	@$(MAKE) -s rebuild
+	@$(MAKE) -s test
 
 rebuild:
-	@$(MAKE) clean
-	@$(MAKE) build
+	@$(MAKE) -s clean
+	@$(MAKE) -s build
 
 build: | bin
 	@ocamlbuild -cflags '-w A' -pkg str $(EXECUTABLE_TARGET)
