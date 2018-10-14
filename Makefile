@@ -26,7 +26,7 @@ bin:
 	@mkdir -p bin
 
 test:
-	@./bin/$(EXECUTABLE_NAME)
+	@./bin/$(EXECUTABLE_NAME) -gen 5 5 ran -e 0.01 -c 0.99
 
 clean:
 	@ocamlbuild -clean
