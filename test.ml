@@ -62,7 +62,6 @@ let opt () : opt =
   let data_src_gen order =
     data_src := `gen {r = !n_rows; k = !n_cols; order}
   in
-  data_src_gen `inc;
   Arg.parse
     [ ( "-gen"
       , Arg.Tuple
