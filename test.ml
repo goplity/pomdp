@@ -65,7 +65,7 @@ let opt () : opt =
   let data_src_gen order =
     data_src := `gen {r = !n_rows; k = !n_cols; order}
   in
-  Arg.parse
+  Arg.parse (Arg.align
     [ ( "-gen"
       , Arg.Tuple
           [ Arg.Set_int n_rows
@@ -80,12 +80,12 @@ let opt () : opt =
                 )
               )
           ]
-      , "Generate data (instead of reading): <rows> <cols> <inc|dec|ran>"
+      , " Generate data (instead of reading): <rows> <cols> <inc|dec|ran>"
       )
-    ; ("-n", Arg.Set_int n_trials, "Number of trials to run")
-    ; ("-e", Arg.Set_float epsilon, "Epsilon")
-    ; ("-c", Arg.Set_float coefficient, "Coefficient")
-    ]
+    ; ("-n", Arg.Set_int n_trials     , " Number of trials to run")
+    ; ("-e", Arg.Set_float epsilon    , " Epsilon")
+    ; ("-c", Arg.Set_float coefficient, " Coefficient")
+    ])
     (fun _ -> ())
     "";
   { n_trials = !n_trials
