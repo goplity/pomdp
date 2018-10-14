@@ -72,7 +72,7 @@ let prob_vecs_to_string prob_vecs =
 let coordinates_to_string coordinates =
   (String.concat ~sep:"; " (List.map coordinates ~f:string_of_int))
 
-let maximize ?(trace=false) prob_vecs ~init:coordinates ~max ~epsilon =
+let maximize ?(trace=false) ~prob_vecs ~init:coordinates ~max ~epsilon =
   let coefficient = 1.0 -. epsilon in
   let rec iter ({iterations; prob_vecs; coordinates} as state) =
     let iterations = succ iterations in

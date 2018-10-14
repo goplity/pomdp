@@ -14,7 +14,7 @@ type state =
 
 val maximize
   : ?trace       : bool
-  -> (prob list) list
+  -> prob_vecs   : prob_vecs
   -> init        : coordinates
   -> max         : (coordinates -> coordinates -> coordinates)
   -> epsilon     : float

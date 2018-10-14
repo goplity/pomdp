@@ -121,7 +121,7 @@ let main () =
   repeat opt.n_trials (fun () ->
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
-        init_prob_vecs
+        ~prob_vecs:init_prob_vecs
         ~trace:false
         ~init:[0; 0]
         ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
