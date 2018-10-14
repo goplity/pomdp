@@ -17,5 +17,6 @@ val maximize
   -> prob_vecs   : prob_vecs
   -> init        : coordinates
   -> max         : (coordinates -> coordinates -> coordinates)
+  -> coefficient : float
   -> epsilon     : float
   -> state

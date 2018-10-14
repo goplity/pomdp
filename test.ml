@@ -13,6 +13,7 @@ type opt =
   { n_trials : int
   ; data_src : [ `read | `gen of gen_spec ]
   ; epsilon  : float
+  ; coefficient : float
   }
 
 let rec read_lines () =
@@ -53,6 +54,7 @@ let rec repeat n thunk =
 
 let opt () : opt =
   let epsilon  = ref 0.01 in
+  let coefficient = ref 0.9 in
   let n_trials = ref 1_000 in
   let n_rows   = ref 3 in
   let n_cols   = ref 3 in
@@ -80,12 +82,14 @@ let opt () : opt =
       )
     ; ("-n", Arg.Set_int n_trials, "Number of trials to run")
     ; ("-e", Arg.Set_float epsilon, "Epsilon")
+    ; ("-c", Arg.Set_float coefficient, "Coefficient")
     ]
     (fun _ -> ())
     "";
   { n_trials = !n_trials
   ; data_src = !data_src
   ; epsilon  = !epsilon
+  ; coefficient = !coefficient
   }
 
 let main () =
@@ -125,6 +129,7 @@ let main () =
         ~trace:false
         ~init:[0; 0]
         ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
+        ~coefficient:opt.coefficient
         ~epsilon:opt.epsilon
     in
     let max = get coordinates in
