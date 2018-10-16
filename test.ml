@@ -3,6 +3,25 @@ open Printf
 module Array = ArrayLabels
 module List  = ListLabels
 
+module Opt : sig
+  type 'a t = 'a option
+
+  val update : 'a t -> f:('a -> 'b) -> default:'b -> 'b t
+
+  val get_assert : 'a t -> 'a
+end = struct
+  type 'a t = 'a option
+
+  let get_assert = function
+    | Some x -> x
+    | None   -> assert false
+
+  let update t ~f ~default =
+    match t with
+    | None   -> Some default
+    | Some x -> Some (f x)
+end
+
 type gen_spec =
   { r : int
   ; k : int
@@ -124,8 +143,8 @@ let main () =
   let counts = Hashtbl.create n_elements in
   List.iter space ~f:(List.iter ~f:(fun x -> Hashtbl.replace counts x 0));
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
-  let iter_max = ref 0 in
-  let iter_min = ref 1_000_000 in  (* A dirty lie, but simplifies init val *)
+  let iter_max = ref None in
+  let iter_min = ref None in
   let iter_sum = ref 0 in
   Random.self_init ();
   repeat opt.n_trials (fun () ->
@@ -145,10 +164,12 @@ let main () =
     in
     let max = get coordinates in
     count max;
-    if iterations > !iter_max then iter_max := iterations;
-    if iterations < !iter_min then iter_min := iterations;
+    iter_max := Opt.update !iter_max ~f:(Stdlib.max iterations) ~default:iterations;
+    iter_min := Opt.update !iter_min ~f:(Stdlib.min iterations) ~default:iterations;
     iter_sum := !iter_sum + iterations
   );
+  let iter_max = Opt.get_assert !iter_max in
+  let iter_min = Opt.get_assert !iter_min in
   let iter_mean = !iter_sum / opt.n_trials in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
@@ -174,8 +195,8 @@ let main () =
   printf "    %d\n" opt.n_trials;
   printf "\n";
   printf "Iterations per trial:\n";
-  printf "    min  %d\n" !iter_min;
-  printf "    max  %d\n" !iter_max;
+  printf "    min  %d\n" iter_min;
+  printf "    max  %d\n" iter_max;
   printf "    mean %d\n" iter_mean;
   printf "\n"
 
