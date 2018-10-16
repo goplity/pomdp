@@ -146,8 +146,12 @@ let main () =
   let iter_max = ref None in
   let iter_min = ref None in
   let iter_sum = ref 0 in
+  let time_max = ref None in
+  let time_min = ref None in
+  let time_sum = ref 0.0 in
   Random.self_init ();
   repeat opt.n_trials (fun () ->
+    let t0 = Sys.time () in
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
         ~prob_vecs:init_prob_vecs
@@ -162,15 +166,24 @@ let main () =
         ~coefficient:opt.coefficient
         ~epsilon:opt.epsilon
     in
+    let t1 = Sys.time () in
+    let time = t1 -. t0 in
     let max = get coordinates in
     count max;
     iter_max := Opt.update !iter_max ~f:(Stdlib.max iterations) ~default:iterations;
     iter_min := Opt.update !iter_min ~f:(Stdlib.min iterations) ~default:iterations;
-    iter_sum := !iter_sum + iterations
+    iter_sum := !iter_sum + iterations;
+    time_max := Opt.update !time_max ~f:(Stdlib.max time) ~default:time;
+    time_min := Opt.update !time_min ~f:(Stdlib.min time) ~default:time;
+    time_sum := !time_sum +. time
   );
   let iter_max = Opt.get_assert !iter_max in
   let iter_min = Opt.get_assert !iter_min in
   let iter_mean = !iter_sum / opt.n_trials in
+  let time_max  = Opt.get_assert !time_max in
+  let time_min  = Opt.get_assert !time_min in
+  let time_sum  = !time_sum in
+  let time_mean = time_sum /. (float_of_int opt.n_trials) in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   let rank =
@@ -194,10 +207,18 @@ let main () =
   printf "Trials:\n";
   printf "    %d\n" opt.n_trials;
   printf "\n";
+  printf "Time:\n";
+  printf "    %f\n" time_sum;
+  printf "\n";
   printf "Iterations per trial:\n";
   printf "    min  %d\n" iter_min;
   printf "    max  %d\n" iter_max;
   printf "    mean %d\n" iter_mean;
+  printf "\n";
+  printf "Time per trial:\n";
+  printf "    min  %f\n" time_min;
+  printf "    max  %f\n" time_max;
+  printf "    mean %f\n" time_mean;
   printf "\n"
 
 let () =
