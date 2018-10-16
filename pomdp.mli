@@ -10,6 +10,7 @@ type state =
   { coordinates : coordinates
   ; prob_vecs   : prob_vecs
   ; iterations  : int
+  ; converged   : bool
   }
 
 val maximize

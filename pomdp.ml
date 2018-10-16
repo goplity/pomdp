@@ -16,6 +16,7 @@ type state =
   { coordinates : coordinates
   ; prob_vecs   : prob_vecs
   ; iterations  : int
+  ; converged   : bool
   }
 
 
@@ -72,6 +73,39 @@ let prob_vecs_to_string prob_vecs =
 let coordinates_to_string coordinates =
   (String.concat ~sep:"; " (List.map coordinates ~f:string_of_int))
 
+let state_print {converged; iterations; prob_vecs; coordinates} =
+  eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
+    iterations
+    (prob_vecs_to_string prob_vecs)
+    (coordinates_to_string coordinates)
+    converged
+
+let state_next state ~cmp ~coefficient ~epsilon =
+  match state with
+  | {converged=true; _} ->
+      state
+  | {converged=false; iterations; prob_vecs; coordinates=c0} ->
+      let c1 = choose prob_vecs in
+      let coordinates, prob_vecs =
+        match cmp c1 c0 with
+        | `GT  | `EQ ->
+            (c1, update prob_vecs ~coordinates:c1 ~coefficient)
+        | `LT ->
+            (c0, prob_vecs)
+      in
+      { iterations = succ iterations
+      ; prob_vecs
+      ; coordinates
+      ; converged  = is_converged prob_vecs ~epsilon
+      }
+
+let state_init ~prob_vecs ~coordinates ~epsilon =
+  { iterations = 0
+  ; prob_vecs
+  ; coordinates
+  ; converged  = is_converged prob_vecs ~epsilon
+  }
+
 let maximize
   ?(trace=false)
   ~prob_vecs
@@ -80,26 +114,12 @@ let maximize
   ~coefficient
   ~epsilon
 =
-  let rec iter ({iterations; prob_vecs; coordinates=c0} as state) =
-    let iterations = succ iterations in
-    let converged = is_converged prob_vecs ~epsilon in
-    if trace then
-      eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
-        iterations
-        (prob_vecs_to_string prob_vecs)
-        (coordinates_to_string c0)
-        converged;
-    if converged then
-      state
-    else
-      let c1 = choose prob_vecs in
-      let coordinates, prob_vecs =
-        match cmp c1 c0 with
-        | `GT  | `EQ ->
-            (c1, update prob_vecs ~coordinates ~coefficient)
-        | `LT ->
-            (c0, prob_vecs)
-      in
-      iter {iterations; prob_vecs; coordinates}
+  let rec iter state =
+    match state with
+    | {converged=true; _} ->
+        state
+    | {converged=false; _} ->
+        if trace then state_print state;
+        iter (state_next state ~cmp ~coefficient ~epsilon)
   in
-  iter {iterations = 0; prob_vecs; coordinates}
+  iter (state_init ~prob_vecs ~coordinates ~epsilon)
