@@ -92,8 +92,14 @@ let maximize
     if converged then
       state
     else
-      let coordinates = max coordinates (choose prob_vecs) in
-      let prob_vecs = update prob_vecs ~coordinates ~coefficient in
-      iter {iterations; prob_vecs; coordinates}
+      let new_coordinates = (choose prob_vecs) in
+      match max new_coordinates coordinates with
+      | `eq 
+      | `gt -> 
+        let coordinates = new_coordinates in
+        let prob_vecs = update prob_vecs ~coordinates ~coefficient in
+        iter {iterations; prob_vecs; coordinates}
+      | `lt ->
+        iter {iterations; prob_vecs; coordinates}
   in
   iter {iterations = 0; prob_vecs; coordinates}

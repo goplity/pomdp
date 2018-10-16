@@ -47,6 +47,9 @@ let gen {r; k; order} =
   Array.iteri matrix ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
     matrix.(r).(k) <- next ()
   ));
+  Array.iteri matrix ~f:(fun r row -> eprintf "\n%!"; Array.iteri row ~f:(fun k _ ->
+      eprintf "%d %!" matrix.(r).(k);));
+  eprintf "\n";
   Array.to_list (Array.map matrix ~f:Array.to_list)
 
 let rec repeat n thunk =
@@ -125,9 +128,16 @@ let main () =
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
         ~prob_vecs:init_prob_vecs
-        ~trace:false
+        ~trace:true
         ~init:[0; 0]
-        ~max:(fun c1 c2 -> if (get c1) >= (get c2) then c1 else c2)
+        ~max:(fun c1 c2 -> 
+            let val1 = (get c1) in
+            let val2 = (get c2) in
+            match compare val1 val2 with
+            | -1 -> `lt 
+            | 0 -> `eq 
+            | 1 -> `gt
+        )
         ~coefficient:opt.coefficient
         ~epsilon:opt.epsilon
     in
