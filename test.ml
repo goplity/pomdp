@@ -130,13 +130,11 @@ let main () =
         ~prob_vecs:init_prob_vecs
         ~trace:true
         ~init:[0; 0]
-        ~max:(fun c1 c2 -> 
-            let val1 = (get c1) in
-            let val2 = (get c2) in
-            match compare val1 val2 with
-            | -1 -> `lt 
-            | 0 -> `eq 
-            | 1 -> `gt
+        ~cmp:(fun c1 c2 ->
+            match compare (get c1) (get c2) with
+            | n when n < 0 -> `LT
+            | n when n > 0 -> `GT
+            | _            -> `EQ
         )
         ~coefficient:opt.coefficient
         ~epsilon:opt.epsilon

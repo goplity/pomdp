@@ -16,7 +16,7 @@ val maximize
   : ?trace       : bool
   -> prob_vecs   : prob_vecs
   -> init        : coordinates
-  -> max         : (coordinates -> coordinates -> [`lt | `eq | `gt])
+  -> cmp         : (coordinates -> coordinates -> [`LT | `EQ | `GT])
   -> coefficient : float
   -> epsilon     : float
   -> state

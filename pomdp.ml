@@ -24,7 +24,7 @@ let uniform () =
 
 let choose prob_vecs =
   List.map prob_vecs ~f:(fun prob_vec ->
-    let u = uniform () in 
+    let u = uniform () in
     let exception Return of int in
     match
       (List.fold_left prob_vec ~init:(-1, 0.0) ~f:(fun (i, sum) p ->
@@ -76,30 +76,30 @@ let maximize
   ?(trace=false)
   ~prob_vecs
   ~init:coordinates
-  ~max
+  ~cmp
   ~coefficient
   ~epsilon
 =
-  let rec iter ({iterations; prob_vecs; coordinates} as state) =
+  let rec iter ({iterations; prob_vecs; coordinates=c0} as state) =
     let iterations = succ iterations in
     let converged = is_converged prob_vecs ~epsilon in
     if trace then
       eprintf "iter: %5d, probs: %s, coordinates: %s, converged: %B\n%!"
         iterations
         (prob_vecs_to_string prob_vecs)
-        (coordinates_to_string coordinates)
+        (coordinates_to_string c0)
         converged;
     if converged then
       state
     else
-      let new_coordinates = (choose prob_vecs) in
-      match max new_coordinates coordinates with
-      | `eq 
-      | `gt -> 
-        let coordinates = new_coordinates in
-        let prob_vecs = update prob_vecs ~coordinates ~coefficient in
-        iter {iterations; prob_vecs; coordinates}
-      | `lt ->
-        iter {iterations; prob_vecs; coordinates}
+      let c1 = choose prob_vecs in
+      let coordinates, prob_vecs =
+        match cmp c1 c0 with
+        | `GT  | `EQ ->
+            (c1, update prob_vecs ~coordinates ~coefficient)
+        | `LT ->
+            (c0, prob_vecs)
+      in
+      iter {iterations; prob_vecs; coordinates}
   in
   iter {iterations = 0; prob_vecs; coordinates}
