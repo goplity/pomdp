@@ -14,6 +14,7 @@ type opt =
   ; data_src : [ `read | `gen of gen_spec ]
   ; epsilon  : float
   ; coefficient : float
+  ; trace    : bool
   }
 
 let rec read_lines () =
@@ -56,6 +57,7 @@ let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
 
 let opt () : opt =
+  let trace    = ref false in
   let epsilon  = ref 0.01 in
   let coefficient = ref 0.9 in
   let n_trials = ref 1_000 in
@@ -85,6 +87,7 @@ let opt () : opt =
     ; ("-n", Arg.Set_int n_trials     , " Number of trials to run")
     ; ("-e", Arg.Set_float epsilon    , " Epsilon")
     ; ("-c", Arg.Set_float coefficient, " Coefficient")
+    ; ("-t", Arg.Set       trace      , " Trace enabled")
     ])
     (fun _ -> ())
     "";
@@ -92,6 +95,7 @@ let opt () : opt =
   ; data_src = !data_src
   ; epsilon  = !epsilon
   ; coefficient = !coefficient
+  ; trace    = !trace
   }
 
 let main () =
@@ -128,7 +132,7 @@ let main () =
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
         ~prob_vecs:init_prob_vecs
-        ~trace:true
+        ~trace:opt.trace
         ~init:[0; 0]
         ~cmp:(fun c1 c2 ->
             match compare (get c1) (get c2) with
