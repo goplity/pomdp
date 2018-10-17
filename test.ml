@@ -182,7 +182,6 @@ let main () =
     | `read     -> read_ints ()
     | `gen spec -> gen spec
   in
-
   let rows = space in
   let row0 = List.nth rows 0 in
   let n_rows = List.length rows in
