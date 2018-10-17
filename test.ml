@@ -55,8 +55,7 @@ let opt () : opt =
   ; trace    = !trace
   }
 
-let main () =
-  let opt = opt () in
+let main opt =
   let space = Space.from opt.data_src in
   eprintf "\nSpace:\n%!";
   Space.print space ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
@@ -124,4 +123,4 @@ let main () =
   printf "\n"
 
 let () =
-  main ()
+  main (opt ())
