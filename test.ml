@@ -22,6 +22,54 @@ end = struct
     | Some x -> Some (f x)
 end
 
+module Stats : sig
+  type num =
+    [`Int of int | `Float of float]
+
+  type t
+
+  val create : unit -> t
+
+  val count : t -> num -> unit
+
+  val report : t -> unit
+end = struct
+  type num =
+    [`Int of int | `Float of float]
+
+  type t =
+    { mutable min   : float option
+    ; mutable max   : float option
+    ; mutable sum   : float option
+    ; mutable count : int
+    }
+
+  let create () =
+    { min   = None
+    ; max   = None
+    ; sum   = None
+    ; count = 0
+    }
+
+  let count t n =
+    let n = match n with `Float n -> n | `Int n -> float_of_int n in
+    t.min   <- Opt.update t.min ~default:n ~f:(Stdlib.min n);
+    t.max   <- Opt.update t.max ~default:n ~f:(Stdlib.max n);
+    t.sum   <- Opt.update t.sum ~default:n ~f:((+.) n);
+    t.count <- succ t.count
+
+  let report {min; max; sum; count} =
+    (* TODO: Use int where original value was int *)
+    let min = Opt.get_assert min in
+    let max = Opt.get_assert max in
+    let sum = Opt.get_assert sum in
+    printf "    min   : %f\n" min;
+    printf "    max   : %f\n" max;
+    printf "    sum   : %f\n" sum;
+    printf "    count : %d\n" count;
+    printf "    mean  : %f\n" (sum /. (float_of_int count));
+end
+
 type gen_spec =
   { r : int
   ; k : int
@@ -143,12 +191,8 @@ let main () =
   let counts = Hashtbl.create n_elements in
   List.iter space ~f:(List.iter ~f:(fun x -> Hashtbl.replace counts x 0));
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
-  let iter_max = ref None in
-  let iter_min = ref None in
-  let iter_sum = ref 0 in
-  let time_max = ref None in
-  let time_min = ref None in
-  let time_sum = ref 0.0 in
+  let stat_iter = Stats.create () in
+  let stat_time = Stats.create () in
   Random.self_init ();
   repeat opt.n_trials (fun () ->
     let t0 = Sys.time () in
@@ -170,20 +214,9 @@ let main () =
     let time = t1 -. t0 in
     let max = get coordinates in
     count max;
-    iter_max := Opt.update !iter_max ~f:(Stdlib.max iterations) ~default:iterations;
-    iter_min := Opt.update !iter_min ~f:(Stdlib.min iterations) ~default:iterations;
-    iter_sum := !iter_sum + iterations;
-    time_max := Opt.update !time_max ~f:(Stdlib.max time) ~default:time;
-    time_min := Opt.update !time_min ~f:(Stdlib.min time) ~default:time;
-    time_sum := !time_sum +. time
+    Stats.count stat_iter (`Int iterations);
+    Stats.count stat_time (`Float time);
   );
-  let iter_max = Opt.get_assert !iter_max in
-  let iter_min = Opt.get_assert !iter_min in
-  let iter_mean = !iter_sum / opt.n_trials in
-  let time_max  = Opt.get_assert !time_max in
-  let time_min  = Opt.get_assert !time_min in
-  let time_sum  = !time_sum in
-  let time_mean = time_sum /. (float_of_int opt.n_trials) in
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   let rank =
@@ -208,17 +241,12 @@ let main () =
   printf "    %d\n" opt.n_trials;
   printf "\n";
   printf "Time:\n";
-  printf "    %f\n" time_sum;
   printf "\n";
   printf "Iterations per trial:\n";
-  printf "    min  %d\n" iter_min;
-  printf "    max  %d\n" iter_max;
-  printf "    mean %d\n" iter_mean;
+  Stats.report stat_iter;
   printf "\n";
   printf "Time per trial:\n";
-  printf "    min  %f\n" time_min;
-  printf "    max  %f\n" time_max;
-  printf "    mean %f\n" time_mean;
+  Stats.report stat_time;
   printf "\n"
 
 let () =
