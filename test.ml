@@ -99,6 +99,17 @@ let read_ints () =
   |> List.map ~f:(Str.split re_whitespace)
   |> List.map ~f:(List.map ~f:int_of_string)
 
+let matrix_print m ~to_string ~indent =
+  Array.iter m ~f:(fun row ->
+    eprintf "%s" indent;
+    let sep = ref "" in
+    Array.iter row ~f:(fun x ->
+      eprintf "%s%s%!" !sep (to_string x);
+      sep := " "
+    );
+    eprintf "\n%!"
+  )
+
 let gen {r; k; order} =
   let next =
     match order with
@@ -115,9 +126,8 @@ let gen {r; k; order} =
   Array.iteri matrix ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
     matrix.(r).(k) <- next ()
   ));
-  Array.iteri matrix ~f:(fun r row -> eprintf "\n%!"; Array.iteri row ~f:(fun k _ ->
-      eprintf "%d %!" matrix.(r).(k);));
-  eprintf "\n";
+  eprintf "\nGenerated space:\n%!";
+  matrix_print matrix ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
   Array.to_list (Array.map matrix ~f:Array.to_list)
 
 let rec repeat n thunk =
