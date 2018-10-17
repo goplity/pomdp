@@ -1,7 +1,6 @@
 open Printf
 
-module Array = ArrayLabels
-module List  = ListLabels
+module List = ListLabels
 
 module Opt : sig
   type 'a t = 'a option
@@ -70,65 +69,13 @@ end = struct
     printf "    mean  : %f\n" (sum /. (float_of_int count));
 end
 
-type gen_spec =
-  { r : int
-  ; k : int
-  ; order : [`inc | `dec | `ran]
-  }
-
 type opt =
   { n_trials : int
-  ; data_src : [ `read | `gen of gen_spec ]
+  ; data_src : [ `read | `gen of Space.gen_spec ]
   ; epsilon  : float
   ; coefficient : float
   ; trace    : bool
   }
-
-let rec read_lines () =
-  match read_line () with
-  | exception End_of_file ->
-      []
-  | line ->
-      line :: read_lines ()
-
-let re_whitespace =
-  Str.regexp "[ \t]+"
-
-let read_ints () =
-  read_lines ()
-  |> List.map ~f:(Str.split re_whitespace)
-  |> List.map ~f:(List.map ~f:int_of_string)
-
-let matrix_print m ~to_string ~indent =
-  Array.iter m ~f:(fun row ->
-    eprintf "%s" indent;
-    let sep = ref "" in
-    Array.iter row ~f:(fun x ->
-      eprintf "%s%s%!" !sep (to_string x);
-      sep := " "
-    );
-    eprintf "\n%!"
-  )
-
-let gen {r; k; order} =
-  let next =
-    match order with
-    | `inc ->
-        let count = ref 0 in
-        fun () -> incr count; !count
-    | `dec ->
-        let count = ref (r * k) in
-        fun () -> decr count; !count
-    | `ran ->
-        fun () -> Random.int 1000
-  in
-  let matrix = Array.make_matrix ~dimx:r ~dimy:k 0 in
-  Array.iteri matrix ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
-    matrix.(r).(k) <- next ()
-  ));
-  eprintf "\nGenerated space:\n%!";
-  matrix_print matrix ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
-  Array.to_list (Array.map matrix ~f:Array.to_list)
 
 let rec repeat n thunk =
   if n <= 0 then () else (thunk (); repeat (pred n) thunk)
@@ -142,7 +89,7 @@ let opt () : opt =
   let n_cols   = ref 3 in
   let data_src = ref `read in
   let data_src_gen order =
-    data_src := `gen {r = !n_rows; k = !n_cols; order}
+    data_src := `gen {Space.r = !n_rows; k = !n_cols; order}
   in
   Arg.parse (Arg.align
     [ ( "-gen"
@@ -177,28 +124,11 @@ let opt () : opt =
 
 let main () =
   let opt = opt () in
-  let space =
-    match opt.data_src with
-    | `read     -> read_ints ()
-    | `gen spec -> gen spec
-  in
-  let rows = space in
-  let row0 = List.nth rows 0 in
-  let n_rows = List.length rows in
-  let n_cols = List.length row0 in
-  let n_elements = n_rows * n_cols in
-  let init_prob_vecs =
-    let one_out_of total = 1.0 /. (float_of_int total) in
-    [ List.map rows ~f:(fun _ -> one_out_of n_rows)
-    ; List.map row0 ~f:(fun _ -> one_out_of n_cols)
-    ]
-  in
-  let get = function
-    | [r; k] -> List.nth (List.nth space r) k
-    | _      -> assert false
-  in
-  let counts = Hashtbl.create n_elements in
-  List.iter space ~f:(List.iter ~f:(fun x -> Hashtbl.replace counts x 0));
+  let space = Space.from opt.data_src in
+  eprintf "\nSpace:\n%!";
+  Space.print space ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
+  let counts = Hashtbl.create (Space.size space) in
+  Space.iter space ~f:(fun x -> Hashtbl.replace counts x 0);
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
   let stat_iter = Stats.create () in
   let stat_time = Stats.create () in
@@ -207,11 +137,13 @@ let main () =
     let t0 = Sys.time () in
     let Pomdp.({coordinates; iterations; _}) =
       Pomdp.maximize
-        ~prob_vecs:init_prob_vecs
+        ~prob_vecs:(Space.init_prob_of_indices_per_dim space)
         ~trace:opt.trace
         ~init:[0; 0]
         ~cmp:(fun c1 c2 ->
-            match compare (get c1) (get c2) with
+            let v1 = Space.get space c1 in
+            let v2 = Space.get space c2 in
+            match compare v1 v2 with
             | n when n < 0 -> `LT
             | n when n > 0 -> `GT
             | _            -> `EQ
@@ -221,7 +153,7 @@ let main () =
     in
     let t1 = Sys.time () in
     let time = t1 -. t0 in
-    let max = get coordinates in
+    let max = Space.get space coordinates in
     count max;
     Stats.count stat_iter (`Int iterations);
     Stats.count stat_time (`Float time);
@@ -229,7 +161,7 @@ let main () =
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   let rank =
-    let tbl = Hashtbl.create n_elements in
+    let tbl = Hashtbl.create (Space.size space) in
     List.iteri
       (List.sort counts ~cmp:(fun (k1, _) (k2, _) -> compare k2 k1))
       ~f:(fun r (k, _) -> Hashtbl.replace tbl k (r + 1));  (* Because 0 index *)
