@@ -1,3 +1,5 @@
+![agents-sketch](agents-sketch.jpeg)
+
 ```sh
 $ time ./bin/test -gen 5 5 ran -e 0.1
 
