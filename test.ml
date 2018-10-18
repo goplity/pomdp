@@ -64,7 +64,6 @@ let main opt =
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
   let stat_iter = Stats.create () in
   let stat_time = Stats.create () in
-  Random.self_init ();
   repeat opt.n_trials (fun () ->
     let t0 = Sys.time () in
     let Pomdp.({coordinates; iterations; _}) =
@@ -123,4 +122,5 @@ let main opt =
   printf "\n"
 
 let () =
+  Random.self_init ();
   main (opt ())
