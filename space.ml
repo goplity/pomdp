@@ -40,12 +40,12 @@ let gen {r; k; order} =
         fun () -> decr count; !count
     | `ran ->
         fun () -> Random.int 1000
-in
-let t = Array.make_matrix ~dimx:r ~dimy:k 0 in
-Array.iteri t ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
-  t.(r).(k) <- next ()
-));
-t
+  in
+  let t = Array.make_matrix ~dimx:r ~dimy:k 0 in
+  Array.iteri t ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
+    t.(r).(k) <- next ()
+  ));
+  t
 
 let rec read_lines () =
   match read_line () with
