@@ -10,8 +10,8 @@ type index = int
 type coordinates = index list
 
 type gen_spec =
-  { r     : int
-  ; k     : int
+  { rows  : int
+  ; cols  : int
   ; order : [`inc | `dec | `ran]
   }
 
@@ -29,19 +29,19 @@ let init_prob_of_indices_per_dim t =
   ; Array.to_list (Array.map t.(0) ~f:(fun _ -> one_out_of n_cols))
   ]
 
-let gen {r; k; order} =
+let gen {rows; cols; order} =
   let next =
     match order with
     | `inc ->
         let count = ref 0 in
         fun () -> incr count; !count
     | `dec ->
-        let count = ref (r * k) in
+        let count = ref (rows * cols) in
         fun () -> decr count; !count
     | `ran ->
         fun () -> Random.int 1000
   in
-  let t = Array.make_matrix ~dimx:r ~dimy:k 0 in
+  let t = Array.make_matrix ~dimx:rows ~dimy:cols 0 in
   Array.iteri t ~f:(fun r row -> Array.iteri row ~f:(fun k _ ->
     t.(r).(k) <- next ()
   ));

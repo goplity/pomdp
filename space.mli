@@ -5,8 +5,8 @@ type index = int
 type coordinates = index list
 
 type gen_spec =
-  { r     : int
-  ; k     : int
+  { rows  : int
+  ; cols  : int
   ; order : [`inc | `dec | `ran]
   }
 

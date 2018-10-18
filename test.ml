@@ -22,7 +22,7 @@ let opt () : opt =
   let n_cols   = ref 3 in
   let data_src = ref `read in
   let data_src_gen order =
-    data_src := `gen {Space.r = !n_rows; k = !n_cols; order}
+    data_src := `gen {Space.rows = !n_rows; cols = !n_cols; order}
   in
   Arg.parse (Arg.align
     [ ( "-gen"
