@@ -1,23 +1,15 @@
-type prob = float
-
-type prob_vecs = (prob list) list
-
-type prob_index = int
-
-type coordinates = prob_index list
-
-type state =
-  { coordinates : coordinates
-  ; prob_vecs   : prob_vecs
+type 'a state =
+  { coords      : Space.coordinates
+  ; agents      : ('a Agent.t) list
   ; iterations  : int
   ; converged   : bool
   }
 
 val maximize
-  : ?trace       : bool
-  -> prob_vecs   : prob_vecs
-  -> init        : coordinates
-  -> cmp         : (coordinates -> coordinates -> [`LT | `EQ | `GT])
-  -> coefficient : float
-  -> epsilon     : float
-  -> state
+  : ?trace               : bool
+  -> spaces              : 'a Space.t list
+  -> space_val_to_string : ('a -> string)
+  -> init_coords_max     : Space.coordinates
+  -> coefficient         : float
+  -> epsilon             : float
+  -> 'a state

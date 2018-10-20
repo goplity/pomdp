@@ -56,43 +56,41 @@ let opt () : opt =
   }
 
 let main opt =
-  let space = Space.from opt.data_src in
-  eprintf "\nSpace:\n%!";
-  Space.print space ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
-  let counts = Hashtbl.create (Space.size space) in
-  Space.iter space ~f:(fun x -> Hashtbl.replace counts x 0);
+  let n_dimensions = 2 in
+  let n_spaces = n_dimensions in
+  let spaces = Space.from opt.data_src ~n:n_spaces in
+  let n_elements_in_all_spaces = (Space.size (List.hd spaces)) * n_spaces in
+  (* TODO: Review meaning of counts in the face of multiple spaces *)
+  let counts = Hashtbl.create n_elements_in_all_spaces in
+  List.iter spaces ~f:(fun space ->
+    eprintf "\nSpace:\n%!";
+    Space.print space ~to_string:(fun i -> sprintf "%3d" i) ~indent:"  ";
+    Space.iter space ~f:(fun x -> Hashtbl.replace counts x 0);
+  );
   let count x = Hashtbl.replace counts x (succ (Hashtbl.find counts x)) in
   let stat_iter = Stats.create () in
   let stat_time = Stats.create () in
   repeat opt.n_trials (fun () ->
     let t0 = Sys.time () in
-    let Pomdp.({coordinates; iterations; _}) =
+    let Pomdp.({coords; iterations; _}) =
       Pomdp.maximize
-        ~prob_vecs:(Space.init_prob_of_indices_per_dim space)
+        ~spaces
+        ~space_val_to_string:(sprintf "%d")
         ~trace:opt.trace
-        ~init:[0; 0]
-        ~cmp:(fun c1 c2 ->
-            let v1 = Space.get space c1 in
-            let v2 = Space.get space c2 in
-            match compare v1 v2 with
-            | n when n < 0 -> `LT
-            | n when n > 0 -> `GT
-            | _            -> `EQ
-        )
+        ~init_coords_max:[0; 0]
         ~coefficient:opt.coefficient
         ~epsilon:opt.epsilon
     in
     let t1 = Sys.time () in
     let time = t1 -. t0 in
-    let max = Space.get space coordinates in
-    count max;
+    List.iter spaces ~f:(fun space -> count (Space.get space coords));
     Stats.count stat_iter (`Int iterations);
-    Stats.count stat_time (`Float time);
+    Stats.count stat_time (`Float time)
   );
   let counts = Hashtbl.fold (fun k v acc -> (k, v) :: acc) counts [] in
   let counts = List.sort counts ~cmp:(fun (_, v1) (_, v2) -> compare v1 v2) in
   let rank =
-    let tbl = Hashtbl.create (Space.size space) in
+    let tbl = Hashtbl.create n_elements_in_all_spaces in
     List.iteri
       (List.sort counts ~cmp:(fun (k1, _) (k2, _) -> compare k2 k1))
       ~f:(fun r (k, _) -> Hashtbl.replace tbl k (r + 1));  (* Because 0 index *)
@@ -105,7 +103,7 @@ let main opt =
   List.iter counts ~f:(fun (element, count) ->
     printf
       "%6d | %5d |    %3d%% | %5d\n%!"
-      element count (100 * count / opt.n_trials) (rank element)
+      element count ((100 * count / opt.n_trials) / n_spaces) (rank element)
   );
   printf "=================================\n%!";
   printf "\n";

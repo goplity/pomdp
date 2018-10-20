@@ -18,18 +18,25 @@ type gen_spec =
 let iter t ~f =
   Array.iter t ~f:(Array.iter ~f)
 
+let rows t =
+  Array.length t
+
+let cols t =
+  Array.length t.(0)
+
 let size t =
-  (Array.length t) * (Array.length t.(0))
+  (rows t) * (cols t)
 
 let init_prob_of_indices_per_dim t =
   let n_rows = Array.length t     in
   let n_cols = Array.length t.(0) in
   let one_out_of total = 1.0 /. (float_of_int total) in
+  (* Must match the order that "get" uses (see bellow) *)
   [ Array.to_list (Array.map t     ~f:(fun _ -> one_out_of n_rows))
   ; Array.to_list (Array.map t.(0) ~f:(fun _ -> one_out_of n_cols))
   ]
 
-let gen {rows; cols; order} =
+let gen {rows; cols; order} () =
   let next =
     match order with
     | `inc ->
@@ -64,13 +71,26 @@ let read_ints () =
   |> List.map ~f:(Array.of_list)
   |> Array.of_list
 
-let from = function
-  | `read     -> read_ints ()
-  | `gen spec -> gen spec
+let dup n x =
+  let rec dup i n x =
+    if i >= n then [] else x :: dup (succ i) n x
+  in
+  dup 0 n x
+
+let from src ~n =
+  match src with
+  | `read     -> let t = read_ints () in [t; t]  (* TODO: Something more-interesting *)
+  | `gen spec -> List.map (dup n ()) ~f:(gen spec)
 
 let get t = function
   | [r; k] -> t.(r).(k)
   | _      -> assert false
+
+let cmp a b =
+  match Stdlib.compare a b with
+  | n when n < 0 -> `LT
+  | n when n > 0 -> `GT
+  | _            -> `EQ
 
 let print t ~to_string ~indent =
   Array.iter t ~f:(fun row ->
