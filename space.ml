@@ -82,9 +82,14 @@ let dup n x =
 let from src ~n =
   match src with
   | `read ->
-      [ read_ints ()
-      ; read_ints ()
-      ]  (* TODO: Consider reading N spaces *)
+      let t1 = read_ints () in
+      let t2 =
+        match read_ints () with
+        | [||] -> Array.copy t1
+        | t2   -> t2
+      in
+      (* TODO: Consider reading N spaces *)
+      [t1; t2]
   | `gen spec ->
       List.map (dup n ()) ~f:(gen spec)
 
