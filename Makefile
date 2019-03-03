@@ -14,7 +14,7 @@ rebuild:
 build: $(foreach exe,$(EXECUTABLES),bin/$(exe))
 
 bin/%: | bin
-	@ocamlbuild -cflags '-w A' -pkg str $*.$(EXECUTABLE_TYPE)
+	@ocamlbuild -cflags '-w A -g' -pkg str $*.$(EXECUTABLE_TYPE)
 	@rm $*.$(EXECUTABLE_TYPE)
 	@cp _build/$*.$(EXECUTABLE_TYPE) bin/$*
 

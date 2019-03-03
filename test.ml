@@ -120,5 +120,6 @@ let main opt =
   printf "\n"
 
 let () =
+  Printexc.record_backtrace true;
   Random.self_init ();
   main (opt ())
