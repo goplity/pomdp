@@ -58,6 +58,8 @@ let rec read_lines () =
   match read_line () with
   | exception End_of_file ->
       []
+  | "" ->
+      []
   | line ->
       line :: read_lines ()
 
@@ -79,8 +81,12 @@ let dup n x =
 
 let from src ~n =
   match src with
-  | `read     -> let t = read_ints () in [t; t]  (* TODO: Something more-interesting *)
-  | `gen spec -> List.map (dup n ()) ~f:(gen spec)
+  | `read ->
+      [ read_ints ()
+      ; read_ints ()
+      ]  (* TODO: Consider reading N spaces *)
+  | `gen spec ->
+      List.map (dup n ()) ~f:(gen spec)
 
 let get t = function
   | [r; k] -> t.(r).(k)
