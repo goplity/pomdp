@@ -1,4 +1,35 @@
+POMDP
+=====
+
+Cooperative decision making.
+
+One decision needs to be made, but N interested parties are involved and want
+to maximise independent interests.
+
+We map the decision space onto an N-dimensional space and allow each party
+(agent) an independent choice of a position on a single dimension of the space.
+
+1. N-dimensional coordinate space;
+2. N agents (one per dimension);
+3. All agents see the same coordinate space;
+4. Each agent maps an independent problem to this shared coordinate space;
+5. Repeat until all agents converge (frequency of choosing of a particular
+   position reaches threshold (epsilon)):
+    1. Each agent chooses a position on its assigned dimension that valuates
+       (relative to this agent's independent interests) higher or equal to
+       previously-chosen position;
+    2. Each agent adjusts the probabilities of each possible position to
+       slightly favor the chosen one (the coefficient parameter);
+    3. Each agent checks whether it converged (the probability of any single
+       position has approached threshold (the epsillon parameter));
+6. Return the set of chosen positions (i.e. the coordinates).
+
+Agents see the same grid (decision space), but different goals underneath it
+(the problem spaces):
 ![agents-sketch](agents-sketch.jpeg)
+
+Test runs
+---------
 
 ```sh
 $ time ./bin/test -gen 5 5 ran -e 0.1
